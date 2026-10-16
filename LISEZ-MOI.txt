@@ -1,0 +1,15 @@
+TACTIX — BOUTIQUE ET ADMINISTRATION (VERSION CORRIGÉE)
+
+1. Décompressez le ZIP dans un dossier sur votre ordinateur.
+2. Gardez index.html, admin.html et products.js dans le même dossier TACTIX-admin.
+3. Double-cliquez sur admin.html pour gérer les produits.
+4. Ajouter, modifier ou supprimer un produit : les modifications sont enregistrées dans le stockage local de ce navigateur.
+5. Pour actualiser la boutique : cliquez sur « Exporter le catalogue ». Un fichier products.js est téléchargé.
+6. Copiez ce nouveau products.js dans le dossier TACTIX-admin et acceptez de remplacer l'ancien.
+7. Ouvrez ou actualisez index.html pour voir les produits exportés.
+
+IMPORTANT :
+- N'ouvrez pas les fichiers d'une ancienne copie du dossier en même temps. Utilisez toujours les fichiers du même dossier.
+- La boutique est une démonstration locale. Elle n'est pas en ligne et ne gère pas encore les commandes ni les paiements.
+- L'administration locale n'est pas protégée par un mot de passe et ne doit pas être publiée telle quelle.
+- Les modifications sauvegardées dans le navigateur ne sont pas automatiquement transférées dans products.js : l'export est nécessaire.

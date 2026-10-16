@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TACTIX — Administration</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f5f5;color:#171717;font:15px system-ui,Segoe UI,Arial}header{background:#111;color:#fff;padding:18px 20px}header .inner{max-width:1100px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}.logo{font-weight:900;letter-spacing:2px}.wrap{max-width:1100px;margin:auto;padding:28px 20px}.btn{border:0;background:#171717;color:#fff;padding:11px 15px;border-radius:4px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}.btn.light{background:#fff;color:#111;border:1px solid #ccc}.btn.danger{background:#fff;color:#111;border:1px solid #bbb}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.panel,.product{background:#fff;border:1px solid #ddd;border-radius:6px;padding:20px;margin:18px 0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.product{margin:0;min-width:0}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;font-weight:700;margin:12px 0 6px}input,textarea,select{width:100%;min-width:0;padding:11px;border:1px solid #bbb;border-radius:4px;background:#fff;font:inherit}textarea{min-height:90px;resize:vertical}.preview{width:100%;height:180px;object-fit:contain;background:#f1f1f1;border-radius:4px;margin-bottom:10px;display:block}.muted{font-size:13px;color:#777}.empty{text-align:center;padding:30px;color:#777;background:#fff;border:1px dashed #ccc}.status{padding:12px 14px;background:#eee;border:1px solid #ddd;border-radius:5px;margin:14px 0}.actions .btn{margin:0}@media(max-width:750px){.grid,.row{grid-template-columns:1fr}header .inner{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header><div class="inner"><div class="logo">TACTIX / ADMIN</div><a class="btn light" href="index.html">Voir la boutique</a></div></header>
+<main class="wrap">
+<h1>Gestion du catalogue</h1>
+<p>Les produits que tu ajoutes ou modifies apparaissent ici. Pour les afficher sur la boutique, clique sur <b>Exporter le catalogue</b>, puis remplace le fichier <code>products.js</code> du dossier du site par le fichier téléchargé.</p>
+<div class="status" id="status" role="status">Administration prête.</div>
+<div class="actions"><button class="btn" id="add">+ Ajouter un produit</button><button class="btn" id="export">↓ Exporter le catalogue</button><button class="btn danger" id="reset">Réinitialiser le catalogue</button></div>
+<section class="panel"><h2>Produits (<span id="count">0</span>)</h2><div id="list" class="grid"></div></section>
+</main>
+<script src="products.js"></script>
+<script>
+(function(){
+ const KEY='tactix_products_admin_v2';
+ const clone=x=>JSON.parse(JSON.stringify(x||[]));
+ let items=[];
+ try { const saved=localStorage.getItem(KEY); items=saved===null?clone(window.TACTIX_PRODUCTS||[]):JSON.parse(saved); if(!Array.isArray(items)) items=clone(window.TACTIX_PRODUCTS||[]); }
+ catch(err){items=clone(window.TACTIX_PRODUCTS||[]);}
+ const list=document.getElementById('list'), status=document.getElementById('status'), count=document.getElementById('count');
+ const categories=['Consommables','Entretien','Transport','Protection','Équipement','Autre'];
+ function msg(s){status.textContent=s;}
+ function persist(message){try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){msg('Impossible d’enregistrer dans le navigateur. Essaie avec des images moins lourdes.');return;}render();if(message)msg(message);}
+ function el(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}
+ function field(labelText,value,onChange,type='text') { const box=el('div');box.append(el('label','',labelText));const input=type==='textarea'?el('textarea'):el('input');if(type!=='textarea')input.type=type;input.value=value??'';input.addEventListener('input',()=>onChange(input.value));box.append(input);return box; }
+ function render(){count.textContent=items.length;list.replaceChildren();if(!items.length){list.append(el('div','empty','Aucun produit. Clique sur « Ajouter un produit ».'));return;}
+  items.forEach((p,i)=>{const card=el('article','product');const img=el('img','preview');img.alt='Photo du produit';if(p.image){img.src=p.image;img.onerror=()=>{img.removeAttribute('src');};}card.append(img);
+   const row1=el('div','row');row1.append(field('Nom',p.name,v=>{items[i].name=v;persist('Nom modifié.');}));
+   const catbox=el('div');catbox.append(el('label','','Catégorie'));const sel=el('select');categories.forEach(c=>{const o=el('option','',c);o.value=c;if((p.cat||'Autre')===c)o.selected=true;sel.append(o);});sel.addEventListener('change',()=>{items[i].cat=sel.value;persist('Catégorie modifiée.');});catbox.append(sel);row1.append(catbox);card.append(row1);
+   const row2=el('div','row');row2.append(field('Prix (€)',p.price,v=>{items[i].price=v===''?0:Number(v);persist('Prix modifié.');},'number'));row2.lastChild.querySelector('input').step='0.01';row2.append(field('Stock',p.stock??0,v=>{items[i].stock=v===''?0:parseInt(v,10)||0;persist('Stock modifié.');},'number'));card.append(row2);
+   card.append(field('Description',p.desc||'',v=>{items[i].desc=v;persist('Description modifiée.');},'textarea'));
+   const photoBox=el('div');photoBox.append(el('label','','Photo du produit'));const photo=el('input');photo.type='file';photo.accept='image/*';photo.addEventListener('change',()=>{const file=photo.files&&photo.files[0];if(!file)return;if(file.size>2*1024*1024){alert('Choisis une image de moins de 2 Mo.');photo.value='';return;}const reader=new FileReader();reader.onload=()=>{items[i].image=reader.result;persist('Photo enregistrée.');};reader.readAsDataURL(file);});photoBox.append(photo,el('p','muted','Les images sont intégrées au catalogue exporté. Privilégie des photos de moins de 2 Mo.'));card.append(photoBox);
+   const actions=el('div','actions');const save=el('button','btn','Enregistrer');save.type='button';save.addEventListener('click',()=>persist('Produit enregistré.'));const del=el('button','btn danger','Supprimer');del.type='button';del.addEventListener('click',()=>{if(confirm('Supprimer « '+(items[i].name||'ce produit')+' » ?')){items.splice(i,1);persist('Produit supprimé.');}});actions.append(save,del);card.append(actions);list.append(card);
+  });
+ }
+ document.getElementById('add').addEventListener('click',()=>{items.push({id:Date.now()+Math.floor(Math.random()*10000),name:'Nouveau produit',cat:'Autre',desc:'',price:0,stock:0,image:'',icon:'•'});persist('Nouveau produit ajouté. Tu peux le modifier ci-dessous.');window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});});
+ document.getElementById('export').addEventListener('click',()=>{const js='window.TACTIX_PRODUCTS = '+JSON.stringify(items)+';\n';const blob=new Blob([js],{type:'text/javascript;charset=utf-8'});const url=URL.createObjectURL(blob);const a=el('a');a.href=url;a.download='products.js';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);msg('Catalogue exporté. Remplace maintenant le fichier products.js dans le dossier TACTIX par celui qui vient d’être téléchargé.');});
+ document.getElementById('reset').addEventListener('click',()=>{if(confirm('Effacer les changements enregistrés dans ce navigateur et recharger le catalogue de démonstration ?')){localStorage.removeItem(KEY);items=clone(window.TACTIX_PRODUCTS||[]);render();msg('Catalogue de démonstration rechargé.');}});
+ render();
+})();
+</script>
+</body></html>
